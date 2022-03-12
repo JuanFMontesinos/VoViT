@@ -1,8 +1,11 @@
-# VoViT
-VoViT: Low Latency Graph-based Audio-Visual VoiceSeparation Transformer
+# VoViT: Low Latency Graph-based Audio-Visual VoiceSeparation Transformer
+[Project Page](https://ipcv.github.io/VoViT/)  
+[Arxiv Paper](https://arxiv.org/abs/2203.04099)  
 
-Paper Under review. Code will be uploaded upon paper acceptance. 
-### Citation  
+Paper Under review. Code will be uploaded upon paper acceptance.
+
+### Citation
+
 ```
 @inproceedings{montesinos2022vovit,
   title={VoVIT: Low Latency Graph-Based Audio-Visual Voice Sseparation Transformer},
@@ -12,9 +15,36 @@ Paper Under review. Code will be uploaded upon paper acceptance.
 }
 ```
 
+## Installation
 
+Download the repo and the face landmark extractor library:
 
-## Latency   
+```
+https://github.com/JuanFMontesinos/VoViT
+cd VoViT
+git clone https://github.com/cleardusk/3DDFA_V2
+cd 3DDFA_V2
+sh ./build.sh
+cd ..
+```
+
+*Note: Currently, only the offline computation is supported in a user-friendly way.*
+
+In case of incompatibilities due to future updates, the tested commit is:  
+`https://github.com/cleardusk/3DDFA_V2/tree/1b6c67601abffc1e9f248b291708aef0e43b55ae`
+
+## Running a demo
+
+Demos are located in the `demo_samples` folder.  
+Running on `interview.mp4` example:
+
+```
+python preprocessing_interview.py
+python inference_interview.py
+```
+
+## Latency
+
 |               | Preprocessing |   Inference   |             | Preprocessing + Inference |
 |---------------|:-------------:|:-------------:|:-----------:|:-------------------------:|
 |               |               | Graph Network | Whole model |                           |
@@ -23,8 +53,8 @@ Paper Under review. Code will be uploaded upon paper acceptance.
 | VoViT-s1 fp16 |     10.94     |      2.88     |    30.47    |           52.43           |
 | VoViT fp16    |     10.94     |      2.86     |    34.18    |           46.14           |  
 
-Latency estimation for the different variants of VoViT. Average of 10 runs, batch size 100. Device: Nvidia RTX 3090. GPU utilization >98%, memory on demand. Two forward passed done to warm up. 
-Timing corresponds to ms to process 10s of audio
+Latency estimation for the different variants of VoViT. Average of 10 runs, batch size 100. Device: Nvidia RTX 3090. GPU
+utilization >98%, memory on demand. Two forward passed done to warm up. Timing corresponds to ms to process 10s of audio
 
 **Note: Pytorch version is no longer supporting complex32 dtype in pytorch 1.11**  
 
