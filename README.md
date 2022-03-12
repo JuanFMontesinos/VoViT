@@ -27,6 +27,8 @@ cd 3DDFA_V2
 sh ./build.sh
 cd ..
 ```
+### Requirements  
+The core computations (the model itself) depends on python, pytorch, einops and torchaudio. To run demos and visualizations many other libraries are required.
 
 *Note: Currently, only the offline computation is supported in a user-friendly way.*
 
