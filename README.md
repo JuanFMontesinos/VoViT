@@ -2,7 +2,7 @@
 [Project Page](https://ipcv.github.io/VoViT/)  
 [Arxiv Paper](https://arxiv.org/abs/2203.04099)  
 
-Paper Under review. Code will be uploaded upon paper acceptance.
+Accepted to ECCV 2022
 
 ### Citation
 
