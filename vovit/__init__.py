@@ -1,4 +1,5 @@
 import os
+import yaml
 
 import torch
 from einops import rearrange
@@ -20,12 +21,15 @@ class End2EndVoViT(torch.nn.Module):
 
         if self.extract_landmarks:
             from .core.landmark_estimator.TDDFA_GPU import TDDFA
-            self.face_extractor = TDDFA()
+            cfg = yaml.load(open(utils.DEFAULT_CFG_PATH), Loader=yaml.SafeLoader)
+            cfg['checkpoint_fp'] = os.path.join(utils.LANDMARK_LIB_PATH, 'weights', 'mb1_120x120.pth')
+            cfg['bfm_fp'] = os.path.join(utils.LANDMARK_LIB_PATH, 'configs', 'bfm_noneck_v3.pkl')
+            self.face_extractor = TDDFA(**cfg)
         self.register_buffer('mean_face',
                              torch.from_numpy(np_load(os.path.join(core_path, 'speech_mean_face.npy'))).float(),
                              persistent=False)
 
-    def forward(self, mixture, visuals):
+    def forward(self, mixture, visuals, extract_landmarks=False):
         """
         :param mixture: torch.Tensor of shape (B,N)
         :param visuals: torch.Tensor of shape (B,C,H,W) BGR format required
@@ -35,7 +39,7 @@ class End2EndVoViT(torch.nn.Module):
             raise NotImplementedError
         else:
             cropped_video = visuals
-        if self.extract_landmarks:
+        if extract_landmarks:
             ld = self.face_extractor(cropped_video)
             avg = (ld[:-2] + ld[1:-1] + ld[2:]) / 3
             ld[:-2] = avg
@@ -58,10 +62,19 @@ class End2EndVoViT(torch.nn.Module):
         Allows to run inference in an unlimited duration samples (up to gpu memory constrains)
         The results will be trimmed to multiples of 2 seconds (e.g. if your audio is 8.5 seconds long,
         the result will be trimmed to 8 seconds)
+        Args:
+            visuals: raw video if self.extract_landmarks is True, precomputed_landmarks otherwise.
+                    lanmarks are uint16 tensors of shape (T,3,68)
+                    raw video are uint8 RGB tensors of shape (T,H,W,3) (values between 0-255)
+            mixture: tensor of shape (N)
         """
         fps = VIDEO_FRAMERATE
         length = self.vovit.avse.av_se.ap._audio_length
         n_chunks = visuals.shape[0] // (fps * 2)
+        if self.extract_landmarks:
+            visuals = self.face_extractor(visuals)
+            avg = (visuals[:-2] + visuals[1:-1] + visuals[2:]) / 3
+            visuals[:-2] = avg
         visuals = visuals[:n_chunks * fps * 2].view(n_chunks, fps * 2, 3, 68)
         mixture = mixture[:n_chunks * length].view(n_chunks, -1)
         pred = self.forward(mixture, visuals)

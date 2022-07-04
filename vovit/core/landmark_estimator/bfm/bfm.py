@@ -22,6 +22,7 @@ def _to_ctype(arr):
 
 class BFMModel(torch.nn.Module):
     def __init__(self, bfm_fp, shape_dim=40, exp_dim=10):
+        super(BFMModel, self).__init__()
         bfm = _load(bfm_fp)
         if osp.split(bfm_fp)[-1] == 'bfm_noneck_v3.pkl':
             self.tri = _load(make_abs_path('../configs/tri.pkl'))  # this tri/face is re-built for bfm_noneck_v3

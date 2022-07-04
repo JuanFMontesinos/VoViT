@@ -7,13 +7,13 @@ import torch
 from torch import nn
 from torchvision.transforms import Compose
 
-import models
-from bfm import BFMModel
-from utils.io import _load
-from utils.functions import (
+from . import models
+from .bfm import BFMModel
+from .utils.io import _load
+from .utils.functions import (
     crop_video, reshape_fortran, parse_roi_box_from_bbox,
 )
-from utils.tddfa_util import (
+from .utils.tddfa_util import (
     load_model, _batched_parse_param, batched_similar_transform,
     ToTensorGjz, NormalizeGjz
 )
@@ -25,6 +25,7 @@ class TDDFA(nn.Module):
     """TDDFA: named Three-D Dense Face Alignment (TDDFA)"""
 
     def __init__(self, **kvs):
+        super(TDDFA, self).__init__()
         self.size = kvs.get('size', 120)
 
         # load BFM
@@ -48,7 +49,6 @@ class TDDFA(nn.Module):
         )
         model = load_model(model, kvs.get('checkpoint_fp'))
 
-
         self.model = model
 
         # data normalization
@@ -59,12 +59,8 @@ class TDDFA(nn.Module):
 
         # params normalization config
         r = _load(param_mean_std_fp)
-        self.param_mean = torch.from_numpy(r.get('mean'))
-        self.param_std = torch.from_numpy(r.get('std'))
-        self.param_mean = self.param_mean
-        self.param_std = self.param_std
-
-
+        self.register_buffer('param_mean', torch.from_numpy(r.get('mean')), persistent=False)
+        self.register_buffer('param_std', torch.from_numpy(r.get('std')), persistent=False)
 
     def batched_inference(self, video_ori, bbox, **kvs):
         """The main call of TDDFA, given image and box / landmark, return 3DMM params and roi_box
@@ -75,7 +71,8 @@ class TDDFA(nn.Module):
         """
         roi_box = parse_roi_box_from_bbox(bbox)
         video = crop_video(video_ori, roi_box)
-        img = torch.nn.functional.interpolate(video, size=(self.size, self.size), mode='bilinear', align_corners=False)
+        img = torch.nn.functional.interpolate(video.float(), size=(self.size, self.size), mode='bilinear',
+                                              align_corners=False)
 
         inp = self.transform_normalize(img)
         param = self.model(inp)
@@ -96,3 +93,17 @@ class TDDFA(nn.Module):
         pts3d = batched_similar_transform(pts3d, roi_box, size)
 
         return pts3d
+
+    def forward(self, video):
+        """
+        :param video: RGB Video of shape (T,H,W,C) uint8 (values between 0-255). Video has to be cropped around the face
+        accurately (mainly to reduce GPU memory requirements).
+        :return:
+        """
+        T, H, W, C = video.shape
+        assert C == 3, 'Video has to be RGB'
+        video = video.flip(-1)  # BGR conversion
+        video = video.permute(0, 3, 1, 2)  # T H W C -> T C H W
+        param, box_roi = self.batched_inference(video, [0, 0, W, H])
+        pts = self.batched_recon_vers(param, box_roi)
+        return pts

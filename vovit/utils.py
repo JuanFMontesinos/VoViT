@@ -114,6 +114,35 @@ def ffmpeg_call(video_path: str, dst_path: str, input_options: list, output_opti
         print(stderr.read().decode("utf-8"))
 
 
+def ffmpeg_join(video_path: str, audio_path: str, dst_path: str):
+    """
+    Runs ffmpeg for the following format for a single input/output:
+        ffmpeg [input options] -i input [output options] output
+
+
+    :param video_path: str Path to input video
+    :param dst_path: str Path to output video
+    :param input_options: List[str] list of ffmpeg options ready for a Popen format
+    :param output_options: List[str] list of ffmpeg options ready for a Popen format
+    :return: None
+    """
+    assert os.path.isfile(video_path)
+    assert os.path.isfile(audio_path)
+    assert os.path.isdir(os.path.dirname(dst_path))
+
+    result = subprocess.Popen(["ffmpeg",
+                               '-i', video_path, '-i', audio_path,
+                               '-vcodec', 'copy', '-acodec', 'libmp3lame',
+                               dst_path],
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout = result.stdout.read().decode("utf-8")
+    stderr = result.stderr
+    if stdout != '':
+        print(stdout)
+    if stderr is not None:
+        print(stderr.read().decode("utf-8"))
+
+
 def np_int2float(waveform: np.ndarray, raise_error: bool = False) -> np.ndarray:
     """
     Cast an audio array in integer format into float scaling properly .

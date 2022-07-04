@@ -57,6 +57,7 @@ def reshape_fortran(x, shape):
     if len(x.shape) > 0:
         x = x.permute(*reversed(range(len(x.shape))))
     return x.reshape(*reversed(shape)).permute(*reversed(range(len(shape))))
+
 def crop_video(video, roi_box):
     bs, c, h, w = video.shape
 

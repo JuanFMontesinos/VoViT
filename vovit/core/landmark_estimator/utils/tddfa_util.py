@@ -53,8 +53,9 @@ class ToTensorGjz(object):
 
 class NormalizeGjz(torch.nn.Module):
     def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
+        super(NormalizeGjz, self).__init__()
+        self.register_buffer('mean', torch.tensor(mean), persistent=False)
+        self.register_buffer('std', torch.tensor(std), persistent=False)
 
     def __call__(self, tensor):
         tensor.sub_(self.mean).div_(self.std)
