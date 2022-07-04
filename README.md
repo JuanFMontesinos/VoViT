@@ -30,20 +30,28 @@ cd ..
 ### Requirements  
 The core computations (the model itself) depends on python, pytorch, einops and torchaudio. To run demos and visualizations many other libraries are required.
 
-*Note: Currently, only the offline computation is supported in a user-friendly way.*
-
 In case of incompatibilities due to future updates, the tested commit is:  
 `https://github.com/cleardusk/3DDFA_V2/tree/1b6c67601abffc1e9f248b291708aef0e43b55ae`
 
 ## Running a demo
 
 Demos are located in the `demo_samples` folder.  
-Running on `interview.mp4` example:
+To process `interview.mp4`  
+Modify `inference_interview.py`:  
+```
+device = 'cuda:0'
+path = 'demo_samples/interview'
+compute_landmarks = True
+```
+compute_landmarks implies landmarks will be computed on-the-fly (useful for production-ready models). This needs
+curated data (videos cropped around the face etcetera...)
+compute_landmarks = False uses preprocessed landmarks extracted from `preprocessing_interview.py`.  
 
 ```
 python preprocessing_interview.py
 python inference_interview.py
 ```
+
 
 ## Latency
 
