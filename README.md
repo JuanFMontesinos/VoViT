@@ -27,6 +27,7 @@ cd 3DDFA_V2
 sh ./build.sh
 cd ..
 ```
+Download the weights (from the release section) and move them to `VoViT\vovit\core\models\weights`.  
 ### Requirements  
 The core computations (the model itself) depends on python, pytorch, einops and torchaudio. To run demos and visualizations many other libraries are required.
 
