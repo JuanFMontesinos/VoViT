@@ -2,7 +2,9 @@
 [Project Page](https://ipcv.github.io/VoViT/)  
 [Arxiv Paper](https://arxiv.org/abs/2203.04099)  
 
-Accepted to ECCV 2022
+Accepted to ECCV 2022  
+Currently only the speech separation model is uploaded.  
+Feel free to request the singing voice separation model.  
 
 ### Citation
 
