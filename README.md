@@ -2,16 +2,22 @@
 [Project Page](https://ipcv.github.io/VoViT/)  
 [Arxiv Paper](https://arxiv.org/abs/2203.04099)  
 
-Accepted to ECCV 2022
+Accepted to ECCV 2022  
+Currently only the speech separation model is uploaded.  
+Feel free to request the singing voice separation model.  
 
 ### Citation
 
 ```
 @inproceedings{montesinos2022vovit,
-  title={VoVIT: Low Latency Graph-Based Audio-Visual Voice Sseparation Transformer},
-  author={Montesinos, Juan F. and Kadandale, Venkatesh S. and Haro, Gloria},
-  booktitle={Arxiv preprint arXiv:2203.04099},
-  year={2022}
+    author = {Montesinos, Juan F. and Kadandale, Venkatesh S. and Haro, Gloria},
+    title = {VoViT: Low Latency Graph-Based Audio-Visual Voice Separation Transformer},
+    year = {2022},
+    isbn = {978-3-031-19835-9},
+    publisher = {Springer-Verlag},
+    doi = {10.1007/978-3-031-19836-6_18},
+    booktitle = {Computer Vision – ECCV 2022: 17th European Conference, Tel Aviv, Israel, October 23–27, 2022, Proceedings, Part XXXVII},
+    pages = {310–326},
 }
 ```
 
