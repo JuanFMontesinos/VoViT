@@ -13,6 +13,7 @@ from .weights import WEIGHTS_PATH
 from .utils import load_weights
 from .modules.spec2vec import Spec2Vec
 from .modules.st_gcn import ST_GCN
+from .modules.unet import UNet
 from .transformers import *
 
 DURATION = {'vovit_speech': 2, 'vovit_singing_voice': 4}
@@ -309,7 +310,6 @@ class RefinementAVSE_LowLatency(nn.Module):
 
     def __init__(self, av_se: nn.Module):
         super(RefinementAVSE_LowLatency, self).__init__()
-        from flerken.models import UNet
         self.av_se = av_se
         self.unet = UNet(mode='upsample', architecture='sop', layer_kernels="ssssst",
                          output_channels=1,
