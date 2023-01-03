@@ -15,7 +15,7 @@ audio1 = torch.from_numpy(
     vovit.utils.np_int2float(read('demo_samples/3r23tdRALns/00029.wav')[1][:16384 * 2 - 1])).to(device)
 audio1 /= audio1.abs().max()
 mixture = (audio1 + audio2).unsqueeze(0) / 2
-model = vovit.End2EndVoViT(model_name='VoViT_speech', debug={}).to(device)
+model = vovit.SpeechVoViT().to(device)
 model.eval()
 with torch.no_grad():
     pred = model(mixture, tgt_face)

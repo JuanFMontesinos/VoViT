@@ -11,13 +11,13 @@ from .core.functionals import *
 from . import utils
 
 
-class End2EndVoViT(torch.nn.Module):
-    def __init__(self, *, model_name: str, debug: dict, pretrained: bool = True,
+class SpeechVoViT(torch.nn.Module):
+    def __init__(self, debug: dict = {}, pretrained: bool = True,
                  extract_landmarks: bool = False, detect_faces: bool = False):
         super().__init__()
         self.extract_landmarks = extract_landmarks
         self.detect_faces = detect_faces
-        self.vovit = VoViT(model_name=model_name, debug=debug, pretrained=pretrained)
+        self.vovit = VoViT(model_name='VoViT_speech', debug=debug, pretrained=pretrained)
 
         if self.extract_landmarks:
             from .core.landmark_estimator.TDDFA_GPU import TDDFA
@@ -86,6 +86,71 @@ class End2EndVoViT(torch.nn.Module):
                 pred_unraveled[k] = rearrange(v, 'b f t ->  f (b t)')
             if v.ndim == 4:  # Two-channels mask
                 idx = v.shape.index(2)
+                if idx == 1:
+                    string = 'b c f t ->  c f (b t)'
+                elif idx == 3:
+                    string = 'b f t c->  f (b t) c'
+                else:
+                    raise ValueError('Unknown shape')
+                pred_unraveled[k] = rearrange(v, string)
+            if v.ndim == 2:  # Waveforms
+                pred_unraveled[k] = v.flatten()
+        return pred_unraveled
+
+
+class SingingVoiceVoViT(torch.nn.Module):
+    def __init__(self, *, debug: dict, pretrained: bool = True,
+                 extract_landmarks: bool = False, detect_faces: bool = False):
+        super().__init__()
+        self.extract_landmarks = extract_landmarks
+        self.detect_faces = detect_faces
+        self.vovit = VoViT(model_name='vovit_singing_voice', debug=debug, pretrained=pretrained)
+
+        if self.extract_landmarks:
+            raise NotImplementedError('Landmark extraction is not implemented for singing voice')
+
+    def forward(self, mixture, visuals, extract_landmarks=False):
+        """
+        :param mixture: torch.Tensor of shape (B,N)
+        :param visuals: torch.Tensor of shape (B,C,H,W) BGR format required
+        :return:
+        """
+        if self.detect_faces:
+            raise NotImplementedError
+
+        ld = visuals
+
+        ld = rearrange(ld, 'b t j c ->b c t j').unsqueeze(-1).float()
+        mixture = cast_dtype(mixture, raise_error=True)  # Cast integers to float
+        mixture /= mixture.abs().max()
+
+        return self.vovit(mixture, ld)
+
+    def forward_unlimited(self, mixture, visuals):
+        """
+        Allows to run inference in an unlimited duration samples (up to gpu memory constrains)
+        The results will be trimmed to multiples of 2 seconds (e.g. if your audio is 8.5 seconds long,
+        the result will be trimmed to 8 seconds)
+        Args:
+            visuals: raw video if self.extract_landmarks is True, precomputed_landmarks otherwise.
+                    lanmarks are uint16 tensors of shape (T,3,68)
+                    raw video are uint8 RGB tensors of shape (T,H,W,3) (values between 0-255)
+            mixture: tensor of shape (N)
+        """
+        fps = VIDEO_FRAMERATE
+        length = self.vovit.avse.ap._audio_length
+        n_chunks = visuals.shape[0] // (fps * 4)
+        visuals = visuals[:n_chunks * fps * 4].view(n_chunks, fps * 4, 68, 2)
+        mixture = mixture[:n_chunks * length].view(n_chunks, -1)
+        pred = self.forward(mixture, visuals)
+        pred_unraveled = {}
+        for k, v in pred.items():
+            if v is None:
+                continue
+            if v.is_complex():  # Complex spectrogram
+                pred_unraveled[k] = rearrange(v, 'b f t ->  f (b t)')
+            if v.ndim == 4:  # Two-channels mask
+                idx = v.shape[1:].index(2) + 1
                 if idx == 1:
                     string = 'b c f t ->  c f (b t)'
                 elif idx == 3:

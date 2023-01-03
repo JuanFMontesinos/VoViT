@@ -20,11 +20,17 @@ else:
 
 mixture = torch.from_numpy(read(f'{path}/audio.wav')[1]).to(device)
 
-model = vovit.End2EndVoViT(model_name='VoViT_speech', extract_landmarks=compute_landmarks, debug={}).to(device)
+print('Creating model instance...')
+model = vovit.SpeechVoViT(extract_landmarks=compute_landmarks).to(device)
 model.eval()
+print('Done')
+
 with torch.no_grad():
+    print('Forwarding speaker1...')
     pred_s1 = model.forward_unlimited(mixture, speaker1_face)
+    print('Forwarding speaker2...')
     pred_s2 = model.forward_unlimited(mixture, speaker2_face)
+
     wav_s1 = pred_s1['ref_est_wav'].squeeze().cpu().numpy()
     wav_s2 = pred_s2['ref_est_wav'].squeeze().cpu().numpy()
     vd.plot_spectrogram(pred_s1['ref_est_sp'].squeeze(), 16384, 256, remove_labels=True)

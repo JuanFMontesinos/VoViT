@@ -4,6 +4,7 @@ import numpy as np
 import librosa
 import torch
 
+from .singing_voice_demo import DemoDataLoader,t_dict
 
 def plot_spectrogram(spectrogram, sr: int, hop_length,
                      title=None, remove_labels=False, remove_axis=False,
