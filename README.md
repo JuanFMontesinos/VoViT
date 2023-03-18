@@ -1,6 +1,7 @@
 # VoViT: Low Latency Graph-based Audio-Visual VoiceSeparation Transformer
 [Project Page](https://ipcv.github.io/VoViT/)  
 [Arxiv Paper](https://arxiv.org/abs/2203.04099)  
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1KxRTKA4JscbWVeshg2WmvUjSnFNw-Ow1?usp=sharing)
 
 Accepted to ECCV 2022  
 Currently only the speech separation model is uploaded.  
