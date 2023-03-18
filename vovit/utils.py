@@ -1,10 +1,13 @@
 import os
+import io
 import re
 import sys
 import yaml
 import json
 import subprocess
+from typing import Union
 from collections import deque
+from itertools import zip_longest
 
 import numpy as np
 
@@ -362,3 +365,53 @@ def process_video(video_path,
     if save_landmarks:
         np.save(landmarks_dst, np.stack(landmarks).round().astype(np.int16))
     return False
+
+
+def landmarks2img(landmarks: np.ndarray, img: np.ndarray = None) -> np.ndarray:
+    """
+        Plot landmarks on a blank image.
+        args:
+            landmarks: NumPy array of shape (2,68)
+            img: NumPy array of shape (H,W,3)
+    """
+    ml = landmarks[:2].transpose(1, 0)
+    plt.axis('off')
+    plt.tight_layout()
+    fig = plt.figure(figsize=(5, 4))
+    if img is not None:
+        plt.imshow(img)
+    plt.scatter(ml[:, 0], -ml[:, 1], alpha=0.8, color='red', s=20)  # 20
+    plt.plot(ml[:17, 0], -ml[:17, 1], color='green', alpha=0.6)
+    plt.plot(ml[17:22, 0], -ml[17:22, 1], color='green', alpha=0.6)
+    plt.plot(ml[22:27, 0], -ml[22:27, 1], color='green', alpha=0.6)
+    plt.plot(ml[27:31, 0], -ml[27:31, 1], color='green', alpha=0.6)
+    plt.plot(ml[31:36, 0], -ml[31:36, 1], color='green', alpha=0.6)
+    plt.plot(ml[36:42, 0], -ml[36:42, 1], color='green', alpha=0.6)
+    plt.plot([ml[41, 0], ml[36, 0]], [-ml[41, 1], -ml[36, 1]], color='green', alpha=0.6)
+    plt.plot(ml[42:48, 0], -ml[42:48, 1], color='green', alpha=0.6)
+    plt.plot([ml[47, 0], ml[42, 0]], [-ml[47, 1], -ml[42, 1]], color='green', alpha=0.6)
+    plt.plot(ml[48:60, 0], -ml[48:60, 1], color='green', alpha=0.6)
+    plt.plot([ml[48, 0], ml[59, 0]], [-ml[48, 1], -ml[59, 1]], color='green', alpha=0.6)
+    plt.plot(ml[60:, 0], -ml[60:, 1], color='green', alpha=0.6)
+    plt.plot([ml[60, 0], ml[67, 0]], [-ml[60, 1], -ml[67, 1]], color='green', alpha=0.6)
+    plt.axis('off')
+
+    io_buf = io.BytesIO()
+    fig.savefig(io_buf, format='raw')  # , dpi=DPI)
+    io_buf.seek(0)
+    img = np.reshape(np.frombuffer(io_buf.getvalue(), dtype=np.uint8),
+                     newshape=(int(fig.bbox.bounds[3]), int(fig.bbox.bounds[2]), -1))
+    io_buf.close()
+    plt.close(fig)
+    return img
+
+
+def landmarkseq2video(sequence: np.array, imgs: Union[np.array, list] = []) -> np.array:
+    """
+        Convert a sequence of landmarks to a video.
+        args:
+            sequence: NumPy array of shape (N,2,68)
+            imgs: iterable of M (M<=N) NumPy arrays of shape (H,W,3)
+    """
+    for frame, img in zip_longest(sequence, imgs):
+        yield landmarks2img(frame, img)
